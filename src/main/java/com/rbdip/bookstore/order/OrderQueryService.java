@@ -1,7 +1,6 @@
 package com.rbdip.bookstore.order;
 
 import java.util.List;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +16,6 @@ public class OrderQueryService {
 
     @Transactional(readOnly = true)
     public List<OrderView> listOrders() {
-        // N+1: клиент и позиции каждого заказа догружаются отдельными запросами. Цель ЛР4.
-        return orderRepository.findAll(Sort.by("id")).stream().map(OrderView::from).toList();
+        return orderRepository.findAllWithCustomerAndItems().stream().map(OrderView::from).toList();
     }
 }

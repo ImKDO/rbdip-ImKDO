@@ -25,9 +25,9 @@ public class OrderController {
 
     @PostMapping("/orders")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> createOrder(@RequestBody CreateOrderRequest request) {
+    public OrderCreatedResponse createOrder(@RequestBody CreateOrderRequest request) {
         Order order = orderService.createOrder(request);
-        return Map.of("id", order.getId(), "status", order.getStatus());
+        return new OrderCreatedResponse(order.getId(), order.getStatus());
     }
 
     @GetMapping("/orders")
@@ -47,5 +47,8 @@ public class OrderController {
                                     .toList());
                 })
                 .toList();
+    }
+
+    public record OrderCreatedResponse(Long id, String status) {
     }
 }

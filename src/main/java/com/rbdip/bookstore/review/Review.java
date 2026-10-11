@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
+// JPA-сущность без собственного поведения - хранилище данных по определению.
+@SuppressWarnings("PMD.DataClass")
 @Entity
 @Table(name = "reviews")
 public class Review {
@@ -28,7 +30,7 @@ public class Review {
     private String comment;
 
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     protected Review() {
         // for JPA
@@ -39,6 +41,7 @@ public class Review {
         this.authorName = authorName;
         this.rating = rating;
         this.comment = comment;
+        this.createdAt = Instant.now();
     }
 
     public Long getId() {

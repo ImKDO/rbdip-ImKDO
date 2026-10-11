@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 
+// JPA-сущность без собственного поведения - хранилище данных по определению.
+@SuppressWarnings("PMD.DataClass")
 @Entity
 @Table(name = "products")
 public class Product {

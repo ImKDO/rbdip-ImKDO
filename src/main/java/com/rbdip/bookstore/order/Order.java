@@ -18,6 +18,8 @@ import java.time.Instant;
 @Table(name = "orders")
 public class Order {
 
+    public static final String STATUS_NEW = "new";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,7 +37,7 @@ public class Order {
     private String status;
 
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     protected Order() {
         // for JPA
@@ -46,6 +48,7 @@ public class Order {
         this.customerAddress = customerAddress;
         this.customerPhone = customerPhone;
         this.status = status;
+        this.createdAt = Instant.now();
     }
 
     public Long getId() {

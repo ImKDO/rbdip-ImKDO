@@ -208,12 +208,37 @@
                     </dependency>
                 </dependencies>
                 <configuration>
+                    <!-- Ключевые модули с бизнес-логикой: расчёт цены, оформление и
+                         чтение заказов, клиенты, отзывы. Сущности, контроллеры и
+                         эмулятор почты (только пишет в лог) сюда не входят. -->
                     <targetClasses>
-                        <param>com.rbdip.bookstore.order.PricingCalculator</param>
+                        <param>com.rbdip.bookstore.order.PricingCalculator*</param>
+                        <param>com.rbdip.bookstore.order.CustomerType</param>
+                        <param>com.rbdip.bookstore.order.Coupon*</param>
+                        <param>com.rbdip.bookstore.order.CreateOrderRequest*</param>
+                        <param>com.rbdip.bookstore.order.OrderRequestValidator</param>
+                        <param>com.rbdip.bookstore.order.OrderService*</param>
+                        <param>com.rbdip.bookstore.order.OrderQueryService</param>
+                        <param>com.rbdip.bookstore.order.OrderView*</param>
+                        <param>com.rbdip.bookstore.order.OrderPurchaseVerifier</param>
+                        <param>com.rbdip.bookstore.customer.CustomerName</param>
+                        <param>com.rbdip.bookstore.customer.CustomerRegistry</param>
+                        <param>com.rbdip.bookstore.review.ReviewService</param>
                     </targetClasses>
                     <targetTests>
                         <param>com.rbdip.bookstore.*</param>
                     </targetTests>
+                    <!-- Интеграционные тесты (Spring + Testcontainers) мутантов в этих
+                         классах не добавляют, но делают PIT медленным и зависимым от
+                         Docker; мутации ловят быстрые unit-тесты. -->
+                    <excludedTestClasses>
+                        <param>com.rbdip.bookstore.reference.OrderApiReferenceTest</param>
+                        <param>com.rbdip.bookstore.reference.NPlusOneReferenceTest</param>
+                        <param>com.rbdip.bookstore.reference.SchemaNormalizationReferenceTest</param>
+                        <param>com.rbdip.bookstore.reference.LoadDuringMigrationReferenceTest</param>
+                        <param>com.rbdip.bookstore.migration.*</param>
+                        <param>com.rbdip.bookstore.*ApiTest</param>
+                    </excludedTestClasses>
                     <mutationThreshold>60</mutationThreshold>
                     <outputFormats>
                         <outputFormat>XML</outputFormat>

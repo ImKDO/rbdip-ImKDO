@@ -1,5 +1,7 @@
 package com.rbdip.bookstore.order;
 
+import com.rbdip.bookstore.customer.Customer;
+import com.rbdip.bookstore.customer.CustomerRegistry;
 import com.rbdip.bookstore.product.Product;
 import com.rbdip.bookstore.product.ProductRepository;
 import java.math.BigDecimal;
@@ -14,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Сценарий оформления заказа. Сам ничего не проверяет и не считает -
  * только координирует: валидация (OrderRequestValidator), расчёт цены
- * (PricingCalculator), сохранение (репозитории), уведомление клиента
+ * (PricingCalculator), клиент (CustomerRegistry), сохранение заказа вместе
+ * с позициями (OrderRepository), уведомление клиента
  * (OrderPlacedEvent -> OrderConfirmationSender после коммита).
  */
 @Service
@@ -23,22 +26,22 @@ public class OrderService {
     private final OrderRequestValidator validator;
     private final PricingCalculator pricingCalculator;
     private final ProductRepository productRepository;
+    private final CustomerRegistry customerRegistry;
     private final OrderRepository orderRepository;
-    private final OrderItemRepository orderItemRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public OrderService(
             OrderRequestValidator validator,
             PricingCalculator pricingCalculator,
             ProductRepository productRepository,
+            CustomerRegistry customerRegistry,
             OrderRepository orderRepository,
-            OrderItemRepository orderItemRepository,
             ApplicationEventPublisher eventPublisher) {
         this.validator = validator;
         this.pricingCalculator = pricingCalculator;
         this.productRepository = productRepository;
+        this.customerRegistry = customerRegistry;
         this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -51,12 +54,14 @@ public class OrderService {
                 request.customerTypeOrDefault(),
                 request.couponCode());
 
-        Order order = orderRepository.save(new Order(
-                request.customerFullName(), request.customerAddress(), request.customerPhone(), Order.STATUS_NEW));
-        orderItemRepository.saveAll(lines.stream().map(line -> line.toOrderItem(order.getId())).toList());
+        Customer customer = customerRegistry.findOrRegister(
+                request.customerFullName(), request.customerAddress(), request.customerPhone());
+        Order order = new Order(customer, Order.STATUS_NEW);
+        lines.forEach(line -> order.addItem(line.product(), line.quantity()));
+        Order saved = orderRepository.save(order);
 
-        eventPublisher.publishEvent(new OrderPlacedEvent(order.getId(), request.customerFullName(), total));
-        return order;
+        eventPublisher.publishEvent(new OrderPlacedEvent(saved.getId(), customer.getFullName(), total));
+        return saved;
     }
 
     private List<OrderLine> resolveLines(List<CreateOrderRequest.Item> items) {
@@ -82,10 +87,6 @@ public class OrderService {
 
         PricingCalculator.LineItem toLineItem() {
             return new PricingCalculator.LineItem(product.getPrice(), quantity);
-        }
-
-        OrderItem toOrderItem(Long orderId) {
-            return new OrderItem(orderId, product.getName(), product.getPrice(), quantity);
         }
     }
 }
